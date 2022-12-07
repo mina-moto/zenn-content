@@ -8,7 +8,8 @@ published: true
 この記事は[「Sunrise Advent Calendar 2019」](https://adventar.org/calendars/4184)10日目の記事です．
 最近，諸事情により自然言語処理を完全に理解する必要があり，文章の前処理やベクトルの算出とかを行ったので，その辺りの方法について簡単にまとめます．
 
-#必要ライブラリインポート
+# 必要ライブラリインポート
+
 ```python
 import re
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
@@ -21,12 +22,12 @@ import MeCab
 
 対象とする文章
 
-
 ```py
 text = 'Yahoo Japanなどを\r運営するヤフーの親会社Zホールディングス（以下ZHD）とLINEは11月18日、経営統合することで基本合意したことを正式に発表した。\n11月13日に日本経済新聞などが両社の合併を報じていた。'
 ```
 
 ### 改行コードなど空白で置換
+
 \n,\rなど
 
 ```py
@@ -52,6 +53,7 @@ re.sub(r'[0-9]+', "0", text)
 ```
 
 ### アルファベット削除
+
 普通はあまりしないと思います．
 
 ```py
@@ -63,6 +65,7 @@ re.sub(r'[A-z]+', "", text)
 ```
 
 ### 記号文字削除
+
 全角記号を一度半角に変えてから削除．
 
 ```py
@@ -73,8 +76,7 @@ unicodedata.normalize("NFKC", text).translate(str.maketrans("", "", string.punct
 'Yahoo Japanなどを\r運営するヤフーの親会社Zホールディングス以下ZHDとLINEは11月18日経営統合することで基本合意したことを正式に発表した\n11月13日に日本経済新聞などが両社の合併を報じていた'
 ```
 
-
-##前処理まとめ
+## 前処理まとめ
 
 ```py
 def preprocess(text):
@@ -91,10 +93,9 @@ def preprocess(text):
 ' などを 運営するヤフーの親会社ホールディングス以下とは0月0日経営統合することで基本合意したことを正式に発表した 0月0日に日本経済新聞などが両社の合併を報じていた'
 ```
 
-#分かち書き
-Mecabにより形態素解析を行いリストにする．下記は動詞，形容詞，名詞のみを残す例．辞書には[mecab-ipadic-NEologd] (https://github.com/neologd/mecab-ipadic-neologd/blob/master/README.ja.md)が用いられることが多いが今回は使っていない．Mecabの呼び出しを何度も行うと重いのでメソッド外に出している．
+# 分かち書き
 
-
+Mecabにより形態素解析を行いリストにする．下記は動詞，形容詞，名詞のみを残す例．辞書には[mecab-ipadic-NEologd] (<https://github.com/neologd/mecab-ipadic-neologd/blob/master/README.ja.md)が用いられることが多いが今回は使っていない．Mecab>の呼び出しを何度も行うと重いのでメソッド外に出している．
 
 ```py
 mecab = MeCab.Tagger("-Ochasen")
@@ -119,34 +120,39 @@ preprocess後のテキストの結果
 prepreprocess_text=preprocess(text)
 split_into_words(prepreprocess_text)
 ```
+
 ```
 ['運営', 'する', 'ヤフー', '親会社', 'ホールディングス', '以下', '0', '月', '0', '日', '経営', '統合', 'する', 'こと', '基本', '合意', 'し', 'こと', '正式', '発表', 'し', '0', '月', '0', '日', '日本経済新聞', '両社', '合併', '報じ', 'い']
 ```
 
-##分かち書き後の処理
+## 分かち書き後の処理
 
-###ひらがな1文字の単語削除
+### ひらがな1文字の単語削除
 
 ```py
 [w for w in words if re.compile('[\u3041-\u309F]').fullmatch(w) == None]
 ```
+
 ```
 ['運営', 'する', 'ヤフー', '親会社', 'ホールディングス', '以下', '0', '月', '0', '日', '経営', '統合', 'する', 'こと', '基本', '合意', 'こと', '正式', '発表', '0', '月', '0', '日', '日本経済新聞', '両社', '合併', '報じ']
 ```
-###特定の単語を削除
+
+### 特定の単語を削除
+
 主に[SlothLib](http://svn.sourceforge.jp/svnroot/slothlib/CSharp/Version1/SlothLib/NLP/Filter/StopWord/word/Japanese.txt)のようなストップワードリストを利用して削除する．
 
 ```py
 delwords=["月","日"]
 [w for w in words if not(w in delwords)]
 ```
+
 結果
 
 ```
 ['運営', 'する', 'ヤフー', '親会社', 'ホールディングス', '以下', '0', '0', '経営', '統合', 'する', 'こと', '基本', '合意', 'し', 'こと', '正式', '発表', 'し', '0', '0', '日本経済新聞', '両社', '合併', '報じ', 'い']
 ```
 
-##前処理・分かち書きまとめ
+## 前処理・分かち書きまとめ
 
 ```py
 
@@ -212,7 +218,7 @@ model.save('doc2vec.model')
 model=Doc2Vec.load('doc2vec.model')
 ```
 
-###文書ベクトル取得
+### 文書ベクトル取得
 
 学習した文書のベクトル取得(text_listの先頭の文書のベクトル)．デフォルトパラメータで学習した場合100次元．
 
@@ -254,6 +260,7 @@ array([ 2.5095379e-03, -1.2622289e-04, -1.1823229e-03,  3.3415016e-04,
 ```py
 new_text='就職情報サイト『リクナビ』を運営するリクルートキャリアの閲覧履歴にもとづく、就職活動中の学生の「内定辞退率」の予測を企業に販売していた問題で、トヨタ自動車や本田技術研究所など契約先の37社が、個人情報保護法による行政指導の処分を受けたという。'
 ```
+
 文章を分かち書きしてメソッド呼び出し．
 
 ```python
@@ -261,7 +268,8 @@ new_words=generate_dataset(new_text)
 model.infer_vector(new_words)
 ```
 
-##2つの文書の類似度算出
+## 2つの文書の類似度算出
+
 ```py
 words=dataset[0]
 model.docvecs.similarity_unseen_docs(model, words, new_words)
@@ -270,4 +278,3 @@ model.docvecs.similarity_unseen_docs(model, words, new_words)
 ```
 0.14044614
 ```
-
